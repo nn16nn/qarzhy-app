@@ -7,6 +7,7 @@ import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'accounts.dart';
 import 'ops.dart';
+import 'plans.dart';
 import 'shell.dart';
 import 'soon.dart';
 import 'stats.dart';
@@ -47,9 +48,9 @@ class HomePage extends StatelessWidget {
       children.add(_welcome(context));
     } else {
       if (rc.due.isNotEmpty) {
-        children.add(_alert(context, 'bell', '${t('Төлем жақындады')}: ${rc.due.map((r) => s(r['name'])).join(', ')}', () => openSoon(context, 'Тұрақты төлемдер')));
+        children.add(_alert(context, 'bell', '${t('Төлем жақындады')}: ${rc.due.map((r) => s(r['name'])).join(', ')}', () => pushPage(context, (_) => const RecurPage())));
       }
-      if (dt.late > 0) children.add(_alert(context, 'people', '${t('Мерзімі өткен қарыз')}: ${dt.late}', () => openSoon(context, 'Қарыздар')));
+      if (dt.late > 0) children.add(_alert(context, 'people', '${t('Мерзімі өткен қарыз')}: ${dt.late}', () => pushPage(context, (_) => const DebtsPage())));
       final lim = n(st.pref['monthLimit']);
       if (lim > 0) {
         final dim = DateTime(now.year, now.month + 1, 0).day;
@@ -82,11 +83,11 @@ class HomePage extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           _tile(context, 'target', t('Мақсаттар'),
-              st.goals.isNotEmpty ? '${st.moneyShort(gSaved)}${gTarget > 0 ? ' · ${(gSaved / gTarget * 100).round()}%' : ''}' : t('Әлі жоқ'), () => openSoon(context, 'Мақсаттар')),
+              st.goals.isNotEmpty ? '${st.moneyShort(gSaved)}${gTarget > 0 ? ' · ${(gSaved / gTarget * 100).round()}%' : ''}' : t('Әлі жоқ'), () => pushPage(context, (_) => const GoalsPage())),
           _tile(context, 'people', t('Қарыздар'), (dt.lent > 0 || dt.owed > 0) ? '↗ ${st.moneyShort(dt.lent)}  ↙ ${st.moneyShort(dt.owed)}' : t('Қарыз жоқ'),
-              () => openSoon(context, 'Қарыздар')),
+              () => pushPage(context, (_) => const DebtsPage())),
           _tile(context, 'repeat', t('Тұрақты төлемдер'),
-              st.recur.isNotEmpty ? (rc.unpaid > 0 ? '${t('Қалды')} ${st.moneyShort(rc.unpaid)}' : t('Барлығы төленді')) : t('Әлі жоқ'), () => openSoon(context, 'Тұрақты төлемдер')),
+              st.recur.isNotEmpty ? (rc.unpaid > 0 ? '${t('Қалды')} ${st.moneyShort(rc.unpaid)}' : t('Барлығы төленді')) : t('Әлі жоқ'), () => pushPage(context, (_) => const RecurPage())),
           _tile(context, 'calc', t('Есептегіш'), t('Несие · Депозит · Салық'), () => openSoon(context, 'Есептегіш')),
         ],
       ));

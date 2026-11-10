@@ -155,8 +155,6 @@ Future<void> exportData(BuildContext context) async {
     final path = await FilePicker.saveFile(
       dialogTitle: t('Деректі сақтау'),
       fileName: 'qarzhy-${todayISO()}.json',
-      type: FileType.custom,
-      allowedExtensions: ['json'],
       bytes: bytes,
     );
     if (path != null) {
@@ -170,9 +168,9 @@ Future<void> exportData(BuildContext context) async {
 
 Future<void> importBackup(BuildContext context) async {
   try {
-    final r = await FilePicker.pickFiles(type: FileType.any, withData: true);
-    if (r == null || r.files.isEmpty || r.files.first.bytes == null) return;
-    final d = jsonDecode(utf8.decode(r.files.first.bytes!));
+    final file = await FilePicker.pickFile(type: FileType.any);
+    if (file == null) return;
+    final d = jsonDecode(utf8.decode(await file.readAsBytes()));
     if (d is! Map || d['tx'] is! List) throw const FormatException();
     if (!context.mounted) return;
     if (!await ask(context, 'Қазіргі деректің орнына файлдағы дерек қойылады. Жалғастырасыз ба?', ok: 'Ашу')) return;

@@ -7,6 +7,7 @@ import '../core/i18n.dart';
 import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'calc.dart';
 import 'ops.dart';
 import 'shell.dart';
 
@@ -43,6 +44,18 @@ class AccountsPage extends StatelessWidget {
       bs.isNotEmpty ? QList([for (final a in bs) AccRow(a)]) : Empty('wallet', t('Банк шоты жоқ.')),
       SecHead(t('Несиелер'), action: t('Қосу'), actionIcon: 'plus', onAction: () => openAccSheet(context, 'debt')),
       ls.isNotEmpty ? QList([for (final a in ls) AccRow(a)]) : Empty('card', t('Несие жоқ — тамаша.')),
+      if (ls.any((a) => n(a['bal']) > 0 && n(a['pay']) > 0)) ...[
+        SecHead(t('Тағы')),
+        QList([
+          QRow(
+            lead: const IconBox('card'),
+            title: t('Несиелерді жабу жоспары'),
+            sub: ls.where((a) => n(a['bal']) > 0 && n(a['pay']) > 0).length > 1 ? t('Қайсысын бірінші жабу тиімді') : t('Қосымша төлеп ерте жабу'),
+            trail: QIcon('right', color: p.mute),
+            onTap: () => pushPage(context, (_) => const CalcPage('payoff')),
+          ),
+        ]),
+      ],
     ]);
   }
 }

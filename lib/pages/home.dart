@@ -6,10 +6,10 @@ import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'accounts.dart';
+import 'calc.dart';
 import 'ops.dart';
 import 'plans.dart';
 import 'shell.dart';
-import 'soon.dart';
 import 'stats.dart';
 import 'tx_sheet.dart';
 
@@ -88,7 +88,7 @@ class HomePage extends StatelessWidget {
               () => pushPage(context, (_) => const DebtsPage())),
           _tile(context, 'repeat', t('Тұрақты төлемдер'),
               st.recur.isNotEmpty ? (rc.unpaid > 0 ? '${t('Қалды')} ${st.moneyShort(rc.unpaid)}' : t('Барлығы төленді')) : t('Әлі жоқ'), () => pushPage(context, (_) => const RecurPage())),
-          _tile(context, 'calc', t('Есептегіш'), t('Несие · Депозит · Салық'), () => openSoon(context, 'Есептегіш')),
+          _tile(context, 'calc', t('Есептегіш'), t('Несие · Депозит · Салық'), () => pushPage(context, (_) => const CalcListPage())),
         ],
       ));
       final recent = Store.sortTx(List<J>.from(st.txs)).take(6).toList();

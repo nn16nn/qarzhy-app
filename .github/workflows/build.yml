@@ -57,6 +57,8 @@ jobs:
           flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee -a build.log || true
           flutter build apk --release 2>&1 | tee -a build.log
           flutter build appbundle --release 2>&1 | tee -a build.log
+          echo "== SIGNER ==" | tee -a build.log
+          keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab 2>&1 | grep -E "SHA256|Owner" | tee -a build.log
 
       - name: Журналды сақтау (ci-log тармағы)
         if: always()

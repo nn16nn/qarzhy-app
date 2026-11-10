@@ -44,15 +44,18 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload.keystore
+            echo "Кілт табылды — release қолтаңбасы" | tee -a build.log
             printf 'storeFile=upload.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEYSTORE_PASSWORD" > android/key.properties
+          else
+            echo "ЕСКЕРТУ: KEYSTORE_PASSWORD немесе KEY_ALIAS жоқ — debug қолтаңбасы" | tee -a build.log
           fi
 
       - name: Жинау
         run: |
           set -o pipefail
-          flutter --version | tee build.log
+          flutter --version | tee -a build.log
           flutter pub get 2>&1 | tee -a build.log
           flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee -a build.log || true
           flutter build apk --release 2>&1 | tee -a build.log

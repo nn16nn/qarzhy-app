@@ -152,7 +152,7 @@ Future<void> exportData(BuildContext context) async {
   await st.flush();
   final bytes = Uint8List.fromList(utf8.encode(const JsonEncoder.withIndent(' ').convert(st.db)));
   try {
-    final path = await FilePicker.platform.saveFile(
+    final path = await FilePicker.saveFile(
       dialogTitle: t('Деректі сақтау'),
       fileName: 'qarzhy-${todayISO()}.json',
       type: FileType.custom,
@@ -170,7 +170,7 @@ Future<void> exportData(BuildContext context) async {
 
 Future<void> importBackup(BuildContext context) async {
   try {
-    final r = await FilePicker.platform.pickFiles(type: FileType.any, withData: true);
+    final r = await FilePicker.pickFiles(type: FileType.any, withData: true);
     if (r == null || r.files.isEmpty || r.files.first.bytes == null) return;
     final d = jsonDecode(utf8.decode(r.files.first.bytes!));
     if (d is! Map || d['tx'] is! List) throw const FormatException();

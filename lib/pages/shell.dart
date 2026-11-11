@@ -238,14 +238,11 @@ class ShellState extends State<Shell> with SingleTickerProviderStateMixin {
             onTap: () {
               tap();
               setFan(false);
-              Future.delayed(const Duration(milliseconds: 160), () {
-                if (!context.mounted) return;
-                if (x[0] == 'scan' || x[0] == 'import') {
-                  toast('Бұл бөлім келесі жаңартуда');
-                } else {
-                  openTx(context, type: x[0]);
-                }
-              });
+              if (x[0] == 'scan' || x[0] == 'import') {
+                toast('Бұл бөлім келесі жаңартуда');
+              } else {
+                openTx(context, type: x[0]);
+              }
             },
             child: Press(
               scale: .92,
@@ -285,7 +282,7 @@ class _TabPage extends StatefulWidget {
 }
 
 class _TabPageState extends State<_TabPage> with SingleTickerProviderStateMixin {
-  late final AnimationController c = AnimationController(vsync: this, duration: const Duration(milliseconds: 280), value: 1);
+  late final AnimationController c = AnimationController(vsync: this, duration: const Duration(milliseconds: 200), value: 1);
   @override
   void didUpdateWidget(covariant _TabPage old) {
     super.didUpdateWidget(old);

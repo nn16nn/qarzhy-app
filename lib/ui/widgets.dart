@@ -520,10 +520,13 @@ Future<T?> openSheet<T>(BuildContext context, {required String title, required W
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    sheetAnimationStyle: const AnimationStyle(duration: Duration(milliseconds: 420), reverseDuration: Duration(milliseconds: 240)),
+    sheetAnimationStyle: const AnimationStyle(duration: Duration(milliseconds: 280), reverseDuration: Duration(milliseconds: 200)),
     backgroundColor: context.pal.sf,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-    builder: (ctx) => StatefulBuilder(
+    // Дерек өзгерсе, ашық тұрған парақ та бірден жаңарады
+    builder: (ctx) => ListenableBuilder(
+      listenable: Store.i,
+      builder: (ctx, _) => StatefulBuilder(
       builder: (ctx, set) {
         final p = ctx.pal;
         return Padding(
@@ -546,12 +549,13 @@ Future<T?> openSheet<T>(BuildContext context, {required String title, required W
                   ),
                 ]),
                 const SizedBox(height: 12),
-                Appear(delayMs: 60, child: builder(ctx, set)),
+                Appear(ms: 220, dy: 6, child: builder(ctx, set)),
               ]),
             ),
           ),
         );
       },
+    ),
     ),
   );
 }

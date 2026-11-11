@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/fmt.dart';
@@ -58,6 +59,17 @@ class MorePage extends StatelessWidget {
           ]),
         ),
         const ProCard(),
+        // Әзірлеуші нұсқасында (flutter run) ғана көрінеді, Play-дегі нұсқада жоқ
+        if (kDebugMode)
+          QList([
+            QRow(
+              lead: const IconBox('lock'),
+              title: 'Pro · тест мәзірі',
+              sub: 'Pro беру/алу, құлып, сынақты нөлдеу',
+              trail: QIcon('right', color: context.pal.mute),
+              onTap: () => openProTest(context),
+            ),
+          ]),
         SecHead(t('Деректер')),
         QList([
           link('download', t('Деректі сақтау'), t('Файлды Drive-қа немесе поштаға сақтап қойыңыз'), () => exportData(context)),

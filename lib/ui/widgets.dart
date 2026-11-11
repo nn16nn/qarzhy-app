@@ -311,36 +311,62 @@ class QBtn extends StatelessWidget {
   }
 }
 
-class QChip extends StatelessWidget {
+class QChip extends StatefulWidget {
   final String label;
   final bool on;
   final VoidCallback onTap;
   final String? sub;
   const QChip(this.label, {super.key, required this.on, required this.onTap, this.sub});
   @override
+  State<QChip> createState() => _QChipState();
+}
+
+class _QChipState extends State<QChip> with SingleTickerProviderStateMixin {
+  // таңдалғанда серпімді секіреді; виджет ағашы өзгермейді, сондықтан басу ешқашан жоғалмайды
+  late final AnimationController c = AnimationController(vsync: this, duration: const Duration(milliseconds: 380), value: 1);
+  late final Animation<double> sc = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: .88, end: 1.06).chain(CurveTween(curve: Curves.easeOut)), weight: 60),
+    TweenSequenceItem(tween: Tween(begin: 1.06, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 40),
+  ]).animate(c);
+
+  @override
+  void didUpdateWidget(covariant QChip old) {
+    super.didUpdateWidget(old);
+    if (widget.on && !old.on) c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    c.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final p = context.pal;
+    final on = widget.on;
     return Padding(
       padding: const EdgeInsets.only(right: 8, bottom: 8),
-      child: Pop(
-        enabled: on,
-        trigger: on,
-        from: .88,
+      child: ScaleTransition(
+        scale: sc,
         child: Material(
-        color: on ? p.ink : p.sf2,
-        borderRadius: BorderRadius.circular(99),
-        child: InkWell(
+          color: on ? p.ink : p.sf2,
           borderRadius: BorderRadius.circular(99),
-          onTap: () { tap(); onTap(); },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            child: Text.rich(TextSpan(children: [
-              TextSpan(text: label, style: TextStyle(color: on ? p.bg : p.ink, fontWeight: FontWeight.w500, fontSize: 14)),
-              if (sub != null) TextSpan(text: '  $sub', style: TextStyle(color: (on ? p.bg : p.ink).withValues(alpha: .6), fontSize: 12, fontFeatures: kNum)),
-            ])),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(99),
+            onTap: () {
+              tap();
+              widget.onTap();
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              child: Text.rich(TextSpan(children: [
+                TextSpan(text: widget.label, style: TextStyle(color: on ? p.bg : p.ink, fontWeight: FontWeight.w500, fontSize: 14)),
+                if (widget.sub != null) TextSpan(text: '  ${widget.sub}', style: TextStyle(color: (on ? p.bg : p.ink).withValues(alpha: .6), fontSize: 12, fontFeatures: kNum)),
+              ])),
+            ),
           ),
         ),
-      ),
       ),
     );
   }

@@ -322,7 +322,11 @@ class QChip extends StatelessWidget {
     final p = context.pal;
     return Padding(
       padding: const EdgeInsets.only(right: 8, bottom: 8),
-      child: Material(
+      child: Pop(
+        enabled: on,
+        trigger: on,
+        from: .88,
+        child: Material(
         color: on ? p.ink : p.sf2,
         borderRadius: BorderRadius.circular(99),
         child: InkWell(
@@ -336,6 +340,7 @@ class QChip extends StatelessWidget {
             ])),
           ),
         ),
+      ),
       ),
     );
   }
@@ -359,8 +364,8 @@ class QSeg extends StatelessWidget {
         final w = c.maxWidth / items.length;
         return Stack(children: [
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
+            duration: const Duration(milliseconds: 380),
+            curve: kSpring,
             left: idx * w,
             top: 0,
             bottom: 0,
@@ -485,6 +490,7 @@ Future<T?> openSheet<T>(BuildContext context, {required String title, required W
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    sheetAnimationStyle: const AnimationStyle(duration: Duration(milliseconds: 420), reverseDuration: Duration(milliseconds: 240)),
     backgroundColor: context.pal.sf,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
     builder: (ctx) => StatefulBuilder(
@@ -510,7 +516,7 @@ Future<T?> openSheet<T>(BuildContext context, {required String title, required W
                   ),
                 ]),
                 const SizedBox(height: 12),
-                builder(ctx, set),
+                Appear(delayMs: 60, child: builder(ctx, set)),
               ]),
             ),
           ),
@@ -588,4 +594,92 @@ class QInput extends StatelessWidget {
       onChanged: onChanged,
     );
   }
+}
+
+// ---------- анимациялар (веб нұсқадағы --spring, --ease) ----------
+const Curve kSpring = Cubic(.34, 1.56, .64, 1);
+const Curve kEase = Cubic(.2, .8, .2, 1);
+
+/// Пайда болу: мөлдірліктен шығып, сәл төменнен көтеріледі (веб: pgIn / stg).
+class Appear extends StatefulWidget {
+  final Widget child;
+  final int delayMs;
+  final double dy;
+  final int ms;
+  const Appear({super.key, required this.child, this.delayMs = 0, this.dy = 10, this.ms = 380});
+  @override
+  State<Appear> createState() => _AppearState();
+}
+
+class _AppearState extends State<Appear> with SingleTickerProviderStateMixin {
+  late final AnimationController c = AnimationController(vsync: this, duration: Duration(milliseconds: widget.ms));
+  late final Animation<double> a = CurvedAnimation(parent: c, curve: kEase);
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delayMs <= 0) {
+      c.forward();
+    } else {
+      Future.delayed(Duration(milliseconds: widget.delayMs), () {
+        if (mounted) c.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: a,
+        child: widget.child,
+        builder: (ctx, child) => Opacity(
+          opacity: a.value.clamp(0.0, 1.0),
+          child: Transform.translate(offset: Offset(0, widget.dy * (1 - a.value)), child: child),
+        ),
+      );
+}
+
+/// Серпімді «секіру» (веб: pop / icPop). [trigger] өзгерген сайын қайталанады.
+class Pop extends StatelessWidget {
+  final Widget child;
+  final Object? trigger;
+  final bool enabled;
+  final double from;
+  const Pop({super.key, required this.child, this.trigger, this.enabled = true, this.from = .85});
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(trigger),
+      tween: Tween(begin: from, end: 1),
+      duration: const Duration(milliseconds: 420),
+      curve: kSpring,
+      child: child,
+      builder: (ctx, v, child) => Transform.scale(scale: v, child: child),
+    );
+  }
+}
+
+/// Басқанда сәл кішірейеді (веб: .row:active scale(.985)).
+class Press extends StatefulWidget {
+  final Widget child;
+  final double scale;
+  const Press({super.key, required this.child, this.scale = .97});
+  @override
+  State<Press> createState() => _PressState();
+}
+
+class _PressState extends State<Press> {
+  bool down = false;
+  @override
+  Widget build(BuildContext context) => Listener(
+        onPointerDown: (_) => setState(() => down = true),
+        onPointerUp: (_) => setState(() => down = false),
+        onPointerCancel: (_) => setState(() => down = false),
+        child: AnimatedScale(scale: down ? widget.scale : 1, duration: const Duration(milliseconds: 150), curve: kEase, child: widget.child),
+      );
 }

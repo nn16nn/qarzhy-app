@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../core/i18n.dart';
@@ -18,25 +21,50 @@ class Shell extends StatefulWidget {
   State<Shell> createState() => ShellState();
 }
 
-class ShellState extends State<Shell> {
+class ShellState extends State<Shell> with SingleTickerProviderStateMixin {
   int tab = 0;
   bool fan = false;
+  late final AnimationController fanC = AnimationController(vsync: this, duration: const Duration(milliseconds: 520), reverseDuration: const Duration(milliseconds: 300));
 
-  void go(int i) => setState(() {
-        tab = i;
-        fan = false;
-      });
+  static const _fanItems = [
+    ['out', 'out', 'Шығын'],
+    ['in', 'in', 'Кіріс'],
+    ['tr', 'swap', 'Аударым'],
+    ['scan', 'receipt', 'Чек'],
+    ['import', 'upload', 'Жүктеу'],
+  ];
+
+  @override
+  void dispose() {
+    fanC.dispose();
+    super.dispose();
+  }
+
+  void setFan(bool on) {
+    if (on == fan) return;
+    setState(() => fan = on);
+    if (on) {
+      fanC.forward();
+    } else {
+      fanC.reverse();
+    }
+  }
+
+  void go(int i) {
+    setFan(false);
+    if (i != tab) setState(() => tab = i);
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    final pages = const [HomePage(), AccountsPage(), StatsPage(), MorePage()];
+    const pages = [HomePage(), AccountsPage(), StatsPage(), MorePage()];
     return PopScope(
       canPop: tab == 0 && !fan,
       onPopInvokedWithResult: (did, _) {
         if (did) return;
         if (fan) {
-          setState(() => fan = false);
+          setFan(false);
         } else {
           go(0);
         }
@@ -44,37 +72,24 @@ class ShellState extends State<Shell> {
       child: Scaffold(
         backgroundColor: p.bg,
         body: Stack(children: [
-          SafeArea(bottom: false, child: IndexedStack(index: tab, children: pages)),
-          if (fan) _fanLayer(context),
+          SafeArea(
+            bottom: false,
+            child: IndexedStack(index: tab, children: [
+              for (var i = 0; i < pages.length; i++) _TabPage(active: tab == i, child: pages[i]),
+            ]),
+          ),
+          _fanLayer(context),
           Positioned(left: 16, right: 16, bottom: 16 + MediaQuery.of(context).padding.bottom, child: _dock(context)),
         ]),
       ),
     );
   }
 
+  // ---------- dock: жылжитын лайм пилюля ----------
   Widget _dock(BuildContext context) {
     final p = context.pal;
-    Widget item(int i, String icon) {
-      final on = tab == i;
-      return Expanded(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            tap();
-            go(i);
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            height: 52,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(color: on ? p.lime : Colors.transparent, borderRadius: BorderRadius.circular(18)),
-            child: Center(child: QIcon(icon, size: 23, color: on ? const Color(0xFF141412) : p.dockInk.withValues(alpha: .55))),
-          ),
-        ),
-      );
-    }
-
+    const icons = ['home', 'wallet', 'pie', 'user'];
+    const addW = 72.0, pillW = 56.0, pillH = 44.0;
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -83,86 +98,163 @@ class ShellState extends State<Shell> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 24, offset: Offset(0, 10))],
       ),
-      child: Row(children: [
-        item(0, 'home'),
-        item(1, 'wallet'),
-        GestureDetector(
-          onTap: () {
-            tap();
-            setState(() => fan = !fan);
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            width: 64,
-            height: 56,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            decoration: BoxDecoration(color: p.lime, borderRadius: BorderRadius.circular(20)),
-            child: Center(
-              child: AnimatedRotation(
-                turns: fan ? .125 : 0,
-                duration: const Duration(milliseconds: 220),
-                child: const QIcon('plus', size: 28, color: Color(0xFF141412), stroke: 2.2),
+      child: LayoutBuilder(builder: (ctx, c) {
+        final w = (c.maxWidth - addW) / 4;
+        double cx(int i) => i < 2 ? w * i + w / 2 : addW + w * i + w / 2;
+        Widget item(int i) {
+          final on = tab == i;
+          return SizedBox(
+            width: w,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                tap();
+                go(i);
+              },
+              child: Center(
+                child: Pop(
+                  enabled: on,
+                  trigger: tab,
+                  from: .7,
+                  child: TweenAnimationBuilder<Color?>(
+                    tween: ColorTween(end: on ? const Color(0xFF141412) : p.dockInk.withValues(alpha: .55)),
+                    duration: const Duration(milliseconds: 200),
+                    builder: (ctx, col, _) => QIcon(icons[i], size: 23, color: col),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        item(2, 'pie'),
-        item(3, 'user'),
-      ]),
-    );
-  }
+          );
+        }
 
-  Widget _fanLayer(BuildContext context) {
-    final p = context.pal;
-    final items = [
-      ['out', 'out', 'Шығын'],
-      ['in', 'in', 'Кіріс'],
-      ['tr', 'swap', 'Аударым'],
-      ['scan', 'receipt', 'Чек'],
-      ['import', 'upload', 'Жүктеу'],
-    ];
-    return Positioned.fill(
-      child: GestureDetector(
-        onTap: () => setState(() => fan = false),
-        child: Container(
-          color: Colors.black.withValues(alpha: .35),
-          alignment: Alignment.bottomCenter,
-          padding: EdgeInsets.only(bottom: 104 + MediaQuery.of(context).padding.bottom, left: 16, right: 16),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutBack,
-            builder: (ctx, v, child) => Transform.translate(offset: Offset(0, 30 * (1 - v)), child: Opacity(opacity: v.clamp(0, 1), child: child)),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: p.sf, borderRadius: BorderRadius.circular(26)),
-              child: Row(children: [
-                for (final x in items)
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () {
-                        tap();
-                        setState(() => fan = false);
-                        Future.delayed(const Duration(milliseconds: 120), () {
-                          if (!context.mounted) return;
-                          if (x[0] == 'scan' || x[0] == 'import') {
-                            toast('Бұл бөлім келесі жаңартуда');
-                          } else {
-                            openTx(context, type: x[0]);
-                          }
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Column(children: [
-                          IconBox(x[1], size: 46, bg: x[0] == 'out' ? p.lime : p.sf2, fg: x[0] == 'out' ? const Color(0xFF141412) : p.ink),
-                          const SizedBox(height: 6),
-                          Text(t(x[2]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: p.ink)),
-                        ]),
+        return Stack(clipBehavior: Clip.none, children: [
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 420),
+            curve: kSpring,
+            left: cx(tab) - pillW / 2,
+            top: (72 - pillH) / 2,
+            width: pillW,
+            height: pillH,
+            child: DecoratedBox(decoration: BoxDecoration(color: p.lime, borderRadius: BorderRadius.circular(15))),
+          ),
+          Row(children: [
+            item(0),
+            item(1),
+            SizedBox(
+              width: addW,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    tap();
+                    setFan(!fan);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 60,
+                    height: 54,
+                    decoration: BoxDecoration(color: fan ? p.sf : p.lime, borderRadius: BorderRadius.circular(20)),
+                    child: Center(
+                      child: AnimatedRotation(
+                        turns: fan ? .375 : 0,
+                        duration: const Duration(milliseconds: 420),
+                        curve: kSpring,
+                        child: QIcon('plus', size: 28, color: fan ? p.ink : const Color(0xFF141412), stroke: 2.2),
                       ),
                     ),
                   ),
+                ),
+              ),
+            ),
+            item(2),
+            item(3),
+          ]),
+        ]);
+      }),
+    );
+  }
+
+  // ---------- + мәзірі: желпуіш ----------
+  Widget _fanLayer(BuildContext context) {
+    final p = context.pal;
+    final bottom = MediaQuery.of(context).padding.bottom;
+    final n = _fanItems.length;
+    return AnimatedBuilder(
+      animation: fanC,
+      builder: (ctx, _) {
+        final v = fanC.value;
+        if (v == 0 && !fan) return const SizedBox.shrink();
+        final opening = fanC.status == AnimationStatus.forward || fanC.status == AnimationStatus.completed;
+        return Positioned.fill(
+          child: Stack(children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setFan(false),
+                child: ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 6 * v.clamp(0.0, 1.0), sigmaY: 6 * v.clamp(0.0, 1.0)),
+                    child: Container(color: Colors.black.withValues(alpha: .38 * v.clamp(0.0, 1.0))),
+                  ),
+                ),
+              ),
+            ),
+            for (var i = 0; i < n; i++) _fanBtn(ctx, p, i, n, v, opening, bottom),
+          ]),
+        );
+      },
+    );
+  }
+
+  Widget _fanBtn(BuildContext context, Pal p, int i, int n, double v, bool opening, double bottom) {
+    final x = _fanItems[i];
+    // әр түйменің өз кешігуі: ашылғанда солдан оңға, жабылғанда керісінше
+    final delay = opening ? i * 0.07 : (n - 1 - i) * 0.05;
+    final span = 1 - (n - 1) * (opening ? 0.07 : 0.05);
+    final lin = ((v - delay) / span).clamp(0.0, 1.0);
+    final t2 = opening ? kSpring.transform(lin) : Curves.easeIn.transform(lin);
+    final a = (-160 + i * (140 / (n - 1))) * math.pi / 180;
+    const r = 122.0;
+    final dx = math.cos(a) * r * t2, dy = math.sin(a) * r * t2;
+    final size = MediaQuery.of(context).size;
+    return Positioned(
+      left: size.width / 2 - 36 + dx,
+      bottom: 16 + bottom + 9 + (-dy),
+      width: 72,
+      child: Opacity(
+        opacity: lin,
+        child: Transform.scale(
+          scale: .3 + .7 * t2,
+          child: GestureDetector(
+            onTap: () {
+              tap();
+              setFan(false);
+              Future.delayed(const Duration(milliseconds: 160), () {
+                if (!context.mounted) return;
+                if (x[0] == 'scan' || x[0] == 'import') {
+                  toast('Бұл бөлім келесі жаңартуда');
+                } else {
+                  openTx(context, type: x[0]);
+                }
+              });
+            },
+            child: Press(
+              scale: .92,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: i == 0 ? p.lime : p.sf,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: const [BoxShadow(color: Color(0x73000000), blurRadius: 26, offset: Offset(0, 10), spreadRadius: -8)],
+                  ),
+                  child: Center(child: QIcon(x[1], size: 24, color: i == 0 ? const Color(0xFF141412) : p.ink)),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  t(x[2]),
+                  maxLines: 1,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, shadows: [Shadow(color: Color(0x66000000), blurRadius: 4, offset: Offset(0, 1))]),
+                ),
               ]),
             ),
           ),
@@ -170,6 +262,40 @@ class ShellState extends State<Shell> {
       ),
     );
   }
+}
+
+/// Таб ауысқанда бет жұмсақ пайда болады (веб: pgIn .28s).
+class _TabPage extends StatefulWidget {
+  final bool active;
+  final Widget child;
+  const _TabPage({required this.active, required this.child});
+  @override
+  State<_TabPage> createState() => _TabPageState();
+}
+
+class _TabPageState extends State<_TabPage> with SingleTickerProviderStateMixin {
+  late final AnimationController c = AnimationController(vsync: this, duration: const Duration(milliseconds: 280), value: 1);
+  @override
+  void didUpdateWidget(covariant _TabPage old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: c,
+        child: widget.child,
+        builder: (ctx, child) {
+          final v = kEase.transform(c.value);
+          return Opacity(opacity: v, child: Transform.translate(offset: Offset(0, 8 * (1 - v)), child: child));
+        },
+      );
 }
 
 /// Беттің ортақ қаңқасы: айналатын тізім, асты dock үшін бос

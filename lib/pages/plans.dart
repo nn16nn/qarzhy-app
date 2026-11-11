@@ -230,7 +230,7 @@ void viewGoal(BuildContext context, String id) {
             final a = st.acc(accId);
             if (a != null) a['bal'] = n(a['bal']) - st.toAcc(a, v);
             g['saved'] = n(g['saved']) + v;
-            (g['hist'] is List ? g['hist'] as List : (g['hist'] = <dynamic>[]) as List).add({'date': todayISO(), 'acc': accId, 'amt': v});
+            (g['hist'] is List ? g['hist'] as List : (g['hist'] = <dynamic>[])).add({'date': todayISO(), 'acc': accId, 'amt': v});
             st.pref['goalAcc'] = accId;
             st.save();
             Navigator.pop(ctx);
@@ -450,7 +450,7 @@ void viewDebt(BuildContext context, String id) {
                   final pa = st.acc(accId);
                   if (pa != null) pa['bal'] = n(pa['bal']) + st.toAcc(pa, out ? v : -v);
                   d['paid'] = n(d['paid']) + v;
-                  (d['hist'] is List ? d['hist'] as List : (d['hist'] = <dynamic>[]) as List).add({'date': todayISO(), 'amt': v, 'acc': accId});
+                  (d['hist'] is List ? d['hist'] as List : (d['hist'] = <dynamic>[])).add({'date': todayISO(), 'amt': v, 'acc': accId});
                   st.save();
                   Navigator.pop(ctx);
                   toast(st.debtLeft(d) <= 0 ? 'Толық жабылды' : 'Төлем жазылды');

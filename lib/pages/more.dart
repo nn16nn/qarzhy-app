@@ -167,18 +167,54 @@ Future<void> exportData(BuildContext context) async {
 }
 
 Future<void> importBackup(BuildContext context) async {
+  dynamic file;
   try {
-    final file = await FilePicker.pickFile(type: FileType.any);
-    if (file == null) return;
-    final d = jsonDecode(utf8.decode(await file.readAsBytes()));
-    if (d is! Map || d['tx'] is! List) throw const FormatException();
-    if (!context.mounted) return;
-    if (!await ask(context, 'Қазіргі деректің орнына файлдағы дерек қойылады. Жалғастырасыз ба?', ok: 'Ашу')) return;
-    Store.i.replaceAll(Map<String, dynamic>.from(d), keepLang: gLang);
-    toast('Дерек ашылды');
-  } catch (_) {
-    toast('Файл оқылмады');
+    file = await FilePicker.pickFile(type: FileType.any);
+  } catch (e) {
+    toast('${t('Файл таңдалмады')}: $e');
+    return;
   }
+  if (file == null) return;
+  Map<String, dynamic>? d;
+  try {
+    d = parseBackup(await file.readAsBytes() as Uint8List);
+  } catch (e) {
+    toast('${t('Файл оқылмады')}: $e');
+    return;
+  }
+  if (d == null) {
+    toast(t('Бұл Qarzhy көшірмесі емес'));
+    return;
+  }
+  if (!context.mounted) return;
+  final cnt = (d['tx'] as List).length;
+  if (!await ask(context, '${t('Файлда')} $cnt ${t('операция')}. ${t('Қазіргі деректің орнына файлдағы дерек қойылады. Жалғастырасыз ба?')}', ok: 'Ашу')) return;
+  Store.i.replaceAll(d, keepLang: gLang);
+  toast('Дерек ашылды');
+}
+
+/// Веб нұсқаның және осы қосымшаның көшірмесін оқиды (BOM, ішкі орау, бұзылған UTF-8 болса да).
+Map<String, dynamic>? parseBackup(Uint8List bytes) {
+  var txt = utf8.decode(bytes, allowMalformed: true).trim();
+  if (txt.startsWith('\uFEFF')) txt = txt.substring(1);
+  final i = txt.indexOf('{');
+  if (i > 0) txt = txt.substring(i);
+  dynamic d = jsonDecode(txt);
+  if (d is String) d = jsonDecode(d);
+  Map? pick(dynamic x) {
+    if (x is! Map) return null;
+    if (x['tx'] is List || x['accounts'] is List) return x;
+    for (final k in ['data', 'db', 'qarzhy_v1', 'backup']) {
+      final r = pick(x[k] is String ? jsonDecode(x[k] as String) : x[k]);
+      if (r != null) return r;
+    }
+    return null;
+  }
+  final m = pick(d);
+  if (m == null) return null;
+  final out = Map<String, dynamic>.from(m);
+  if (out['tx'] is! List) out['tx'] = <dynamic>[];
+  return out;
 }
 
 Future<void> openSnaps(BuildContext context) async {

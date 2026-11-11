@@ -1,15 +1,15 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
 import '../core/fmt.dart';
 import '../core/i18n.dart';
-import 'paywall.dart';
 import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'paywall.dart';
 
 const kAppVersion = '1.1.0';
 

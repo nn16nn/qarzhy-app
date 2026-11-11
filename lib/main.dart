@@ -19,6 +19,8 @@ Future<void> main() async {
   if (at == null || DateTime.now().difference(at).inHours > 20) Store.i.fetchRate();
 }
 
+final Listenable _live = Listenable.merge([Store.i, Pro.i]);
+
 class QarzhyApp extends StatefulWidget {
   const QarzhyApp({super.key});
   @override
@@ -52,7 +54,9 @@ class _QarzhyAppState extends State<QarzhyApp> with WidgetsBindingObserver {
         final th = Store.i.theme;
         gLang = '${Store.i.db['lang']}';
         final mode = th == 'dark' ? ThemeMode.dark : th == 'light' ? ThemeMode.light : ThemeMode.system;
-        return MaterialApp(
+        return LiveScope(
+          notifier: _live,
+          child: MaterialApp(
           title: 'Qarzhy',
           debugShowCheckedModeBanner: false,
           scaffoldMessengerKey: messengerKey,
@@ -67,6 +71,7 @@ class _QarzhyAppState extends State<QarzhyApp> with WidgetsBindingObserver {
             );
           },
           home: Shell(),
+        ),
         );
       },
     );

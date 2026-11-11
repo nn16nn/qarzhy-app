@@ -31,8 +31,18 @@ class Pal extends ThemeExtension<Pal> {
   Pal lerp(ThemeExtension<Pal>? other, double t) => (other is Pal && t > .5) ? other : this;
 }
 
+/// Дерек (Store) немесе Pro өзгергенде оған тәуелді барлық виджетті қайта салады.
+/// `context.pal` қолданатын әр виджет автоматты түрде тәуелді болады —
+/// сондықтан const беттер мен карточкалар да бірден жаңарады.
+class LiveScope extends InheritedNotifier<Listenable> {
+  const LiveScope({super.key, required Listenable super.notifier, required super.child});
+}
+
 extension PalX on BuildContext {
-  Pal get pal => Theme.of(this).extension<Pal>() ?? Pal.light;
+  Pal get pal {
+    dependOnInheritedWidgetOfExactType<LiveScope>();
+    return Theme.of(this).extension<Pal>() ?? Pal.light;
+  }
 }
 
 ThemeData buildTheme(Pal p) {

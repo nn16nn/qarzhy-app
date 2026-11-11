@@ -58,7 +58,7 @@ jobs:
           flutter --version | tee -a build.log
           flutter pub get 2>&1 | tee -a build.log
           flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee -a build.log || true
-          flutter build apk --release 2>&1 | tee -a build.log
+          flutter build apk --release --split-per-abi --target-platform android-arm64 2>&1 | tee -a build.log
           flutter build appbundle --release 2>&1 | tee -a build.log
           echo "== SIGNER ==" | tee -a build.log
           keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab 2>&1 | grep -E "SHA256|Owner" | tee -a build.log
@@ -67,6 +67,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/log && cp build.log /tmp/log/build.log 2>/dev/null || echo "no log" > /tmp/log/build.log
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk /tmp/log/qarzhy.apk 2>/dev/null || true
           echo "${{ job.status }} ${{ github.sha }}" > /tmp/log/status.txt
           cd /tmp/log && git init -q && git checkout -q -b ci-log
           git config user.name "qarzhy-ci" && git config user.email "ci@users.noreply.github.com"
@@ -78,5 +79,5 @@ jobs:
         with:
           name: qarzhy-${{ github.run_number }}
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
             build/app/outputs/bundle/release/app-release.aab

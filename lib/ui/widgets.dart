@@ -162,7 +162,8 @@ class QRow extends StatelessWidget {
   final Widget? trail;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
-  const QRow({super.key, required this.lead, required this.title, this.sub, this.trail, this.onTap, this.onLongPress});
+  final Widget? titleTrail;
+  const QRow({super.key, required this.lead, required this.title, this.sub, this.trail, this.onTap, this.onLongPress, this.titleTrail});
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
@@ -178,7 +179,10 @@ class QRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: p.ink)),
+                Row(children: [
+                  Flexible(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: p.ink))),
+                  if (titleTrail != null) titleTrail!,
+                ]),
                 if (sub != null && sub!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),

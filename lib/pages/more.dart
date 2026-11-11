@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../core/fmt.dart';
 import '../core/i18n.dart';
+import 'paywall.dart';
 import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
@@ -56,6 +57,7 @@ class MorePage extends StatelessWidget {
                 style: TextStyle(color: p.heroMute, fontSize: 13)),
           ]),
         ),
+        const ProCard(),
         SecHead(t('Деректер')),
         QList([
           link('download', t('Деректі сақтау'), t('Файлды Drive-қа немесе поштаға сақтап қойыңыз'), () => exportData(context)),
@@ -132,7 +134,12 @@ class MorePage extends StatelessWidget {
         ),
         SecHead(t('Қосымша')),
         QList([
-          QRow(lead: const IconBox('info'), title: 'Qarzhy $kAppVersion', sub: t('Офлайн жұмыс істейді · сервер жоқ · жарнама жоқ')),
+          QRow(
+            lead: const IconBox('info'),
+            title: 'Qarzhy $kAppVersion',
+            sub: t('Офлайн жұмыс істейді · сервер жоқ · жарнама жоқ'),
+            onLongPress: () => openProTest(context),
+          ),
           QRow(
             lead: IconBox('trash', fg: p.neg),
             title: t('Барлық деректі өшіру'),

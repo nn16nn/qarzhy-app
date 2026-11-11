@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
 import '../core/i18n.dart';
+import '../core/pro.dart';
 import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
@@ -75,7 +76,7 @@ class ShellState extends State<Shell> with SingleTickerProviderStateMixin {
             bottom: false,
             // Дерек өзгерген сайын беттер қайта салынады (жаңа шот, операция т.б. бірден көрінеді)
             child: ListenableBuilder(
-              listenable: Store.i,
+              listenable: Listenable.merge([Store.i, Pro.i]),
               builder: (ctx, _) {
                 // ignore: prefer_const_constructors, prefer_const_literals_to_create_immutables
                 final pages = <Widget>[HomePage(), AccountsPage(), StatsPage(), MorePage()];
@@ -331,7 +332,7 @@ class SubPage extends StatelessWidget {
       backgroundColor: context.pal.bg,
       body: SafeArea(
         child: ListenableBuilder(
-          listenable: Store.i,
+          listenable: Listenable.merge([Store.i, Pro.i]),
           builder: (ctx, _) => ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), children: children),
         ),
       ),
@@ -340,5 +341,5 @@ class SubPage extends StatelessWidget {
 }
 
 void pushPage(BuildContext context, Widget Function(BuildContext) builder) {
-  Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => ListenableBuilder(listenable: Store.i, builder: (c, _) => builder(c))));
+  Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => ListenableBuilder(listenable: Listenable.merge([Store.i, Pro.i]), builder: (c, _) => builder(c))));
 }

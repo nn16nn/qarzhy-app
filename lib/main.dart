@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'core/i18n.dart';
+import 'core/pro.dart';
 import 'core/store.dart';
 import 'pages/shell.dart';
 import 'ui/theme.dart';
@@ -10,6 +11,7 @@ import 'ui/widgets.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Store.i.load();
+  await Pro.i.init();
   runApp(const QarzhyApp());
   // Курсты фонда жаңарту (тәулігіне бір рет)
   final fx = Store.i.db['fx'];
@@ -39,6 +41,7 @@ class _QarzhyAppState extends State<QarzhyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) Store.i.flush();
+    if (state == AppLifecycleState.resumed) Pro.i.sync();
   }
 
   @override

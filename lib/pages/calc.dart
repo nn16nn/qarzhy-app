@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 import '../core/fmt.dart';
 import '../core/i18n.dart';
+import '../core/pro.dart';
 import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'paywall.dart';
 import 'shell.dart';
 
 const kCalcs = [
@@ -42,6 +44,7 @@ class CalcListPage extends StatelessWidget {
             QRow(
               lead: IconBox(c[1]),
               title: t(c[2]),
+              titleTrail: kProCalcs.contains(c[0]) && !Pro.i.isPro ? const ProTag() : null,
               sub: t(c[3]),
               trail: QIcon('right', color: p.mute),
               onTap: () => pushPage(context, (_) => CalcPage(c[0])),
@@ -86,6 +89,9 @@ class _CalcPageState extends State<CalcPage> {
   @override
   Widget build(BuildContext context) {
     final meta = kCalcs.firstWhere((x) => x[0] == widget.k);
+    if (kProCalcs.contains(widget.k) && !Pro.i.isPro) {
+      return SubPage([TopBar(t(meta[2]), sub: t(meta[3])), LockedCard(meta[2])]);
+    }
     final st = Store.i;
     final sym = st.sym;
     List<Widget> form;

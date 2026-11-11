@@ -8,6 +8,7 @@ import '../core/store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'ops.dart';
+import 'paywall.dart';
 import 'shell.dart';
 
 final statsKindNotifier = ValueNotifier<String>('out');
@@ -246,6 +247,7 @@ class _DonutPainter extends CustomPainter {
 }
 
 void openLimitSheet(BuildContext context) {
+  if (!proGate(context)) return;
   final st = Store.i;
   var v = n(st.pref['monthLimit']) > 0 ? '${n(st.pref['monthLimit']).round()}' : '';
   openSheet(context, title: t('Айлық шығын жоспары'), builder: (ctx, set) {

@@ -58,7 +58,6 @@ class ShellState extends State<Shell> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    const pages = [HomePage(), AccountsPage(), StatsPage(), MorePage()];
     return PopScope(
       canPop: tab == 0 && !fan,
       onPopInvokedWithResult: (did, _) {
@@ -74,9 +73,17 @@ class ShellState extends State<Shell> with SingleTickerProviderStateMixin {
         body: Stack(children: [
           SafeArea(
             bottom: false,
-            child: IndexedStack(index: tab, children: [
-              for (var i = 0; i < pages.length; i++) _TabPage(active: tab == i, child: pages[i]),
-            ]),
+            // Дерек өзгерген сайын беттер қайта салынады (жаңа шот, операция т.б. бірден көрінеді)
+            child: ListenableBuilder(
+              listenable: Store.i,
+              builder: (ctx, _) {
+                // ignore: prefer_const_constructors, prefer_const_literals_to_create_immutables
+                final pages = <Widget>[HomePage(), AccountsPage(), StatsPage(), MorePage()];
+                return IndexedStack(index: tab, children: [
+                  for (var i = 0; i < pages.length; i++) _TabPage(active: tab == i, child: pages[i]),
+                ]);
+              },
+            ),
           ),
           _fanLayer(context),
           Positioned(left: 16, right: 16, bottom: 16 + MediaQuery.of(context).padding.bottom, child: _dock(context)),

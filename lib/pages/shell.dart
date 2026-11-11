@@ -219,12 +219,15 @@ class ShellState extends State<Shell> with SingleTickerProviderStateMixin {
     final lin = ((v - delay) / span).clamp(0.0, 1.0);
     final t2 = opening ? kSpring.transform(lin) : Curves.easeIn.transform(lin);
     final a = (-160 + i * (140 / (n - 1))) * math.pi / 180;
-    const r = 122.0;
-    final dx = math.cos(a) * r * t2, dy = math.sin(a) * r * t2;
+    // доға dock-тың үстінде тұрады, сонда шеткі түймелер мен жазулар панельдің астында қалмайды
+    const r = 120.0;
+    final up = -math.sin(a) * r; // 41…120
+    final dx = math.cos(a) * r * 1.12 * t2;
+    final rise = (71 + up) * t2; // + түймесінің ортасынан доғаға дейін
     final size = MediaQuery.of(context).size;
     return Positioned(
       left: size.width / 2 - 36 + dx,
-      bottom: 16 + bottom + 9 + (-dy),
+      bottom: 16 + bottom + 9 + rise,
       width: 72,
       child: Opacity(
         opacity: lin,
